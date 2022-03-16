@@ -248,7 +248,7 @@ class FLServer:
         })
          # uses connection with client and send msg to the client
         recv_msg = self.server.recv(id)
-        param = recv_msg.data
+        param = recv_msg.get_data()
         param = list(map(lambda layer: np.array(layer), param))
         clients_param_dict[id] = param
         return param
@@ -312,7 +312,6 @@ class FLServer:
         threads = []
 
         for id in range(max_clients):
-            #result_code = self.request_setup(id)
             thread = threading.Thread(target=self.request_setup, args=(id, clients_resultcode_dict,))
             threads.append(thread)
             thread.start()

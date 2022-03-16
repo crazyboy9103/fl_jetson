@@ -129,15 +129,15 @@ class FLClient:
 
     def build_model(self, model_name):
         if model_name == CLASSIFY_MODELS.MOBILENETV2:
-        
+            model = models.mobilenet_v2()
         if model_name == CLASSIFY_MODELS.RESNET18:
-            
+            model = models.resnet18()
         if model_name == CLASSIFY_MODELS.VGG16:
-        
+            model = models.vgg16()
         if model_name == DETECT_MODELS.SSD:
-        
+            model = models.detection.ssd()
         if model_name == DETECT_MODELS.SSDLITE:
-            
+            model = models.detection.ssdlite()
 
 
 
