@@ -20,12 +20,11 @@ class DATASET(Enum):
   
 class FLAGS(Enum):
   SETUP = 0
-  HEALTH_CODE = 1
-  START_TRAIN = 2
-  TERMINATE = 3
+  START_TRAIN = 1
+  TERMINATE = 2
 
-  RESULT_OK = 4
-  RESULT_BAD = 5
+  RESULT_OK = 3
+  RESULT_BAD = 4
 
 import sys
 
@@ -63,16 +62,29 @@ class Message(object):
   
   def get_data(self):
     if self.flag == FLAGS.SETUP:
-      return self.data["dataset_name"], self.data["model"], self.data["optim"], self.data["loss"]
-    
-    if self.flag == FLAGS.HEALTH_CODE:
-      return self.data
+      if self.source == -1:
+        return self.data["dataset_name"], self.data["model"], self.data["optim"], self.data["loss"]
+
+      else:
+        return self.data
 
     if self.flag == FLAGS.START_TRAIN:
-      return self.data["epochs"], self.data["batch_size"], self.data["data_idxs"], self.data["param"]
+      if self.source == -1:
+        return self.data["epochs"], self.data["batch_size"], self.data["data_idxs"], self.data["param"]
+      
+      else:
+        return self.data # can be either be parameter or FLAGS.RESULT_BAD
 
-    if self.flag == FLAGS.TERMINATE:
-      return self.data
+    #if self.flag == FLAGS.TERMINATE:
+    #  return self.data
+    
+    if self.flag == FLAGS.RESULT_OK:
+      return FLAGS.RESULT_OK
+
+    if self.flag == FLAGS.RESULT_BAD:
+      return FLAGS.RESULT_BAD
+
+    
     
 
 
