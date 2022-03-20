@@ -1,7 +1,7 @@
 from jetson_fl import FLClient
 import threading
 import argparse
-
+import time
 if __name__ == "__main__":
    parser = argparse.ArgumentParser()
    parser.add_argument("--host", default="localhost", type=str)
@@ -15,3 +15,4 @@ if __name__ == "__main__":
    for client in clients:
       thread = threading.Thread(target=client.task)
       thread.start()
+      time.sleep(3)

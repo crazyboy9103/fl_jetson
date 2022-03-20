@@ -131,17 +131,7 @@ class FLServer:
             return 
         if model_type == DETECT_MODELS.SSD:
             return 
-        dataset_type = "mnist" if "mnist" in self.dataset_name else "cifar"
-        model = tf.keras.models.Sequential([
-            tf.keras.layers.Conv2D(filters=32, kernel_size=(3, 3), activation='relu', input_shape=self.INPUT_SHAPES[dataset_type]),
-            tf.keras.layers.Conv2D(filters=32, kernel_size=(3, 3), activation='relu'),
-            tf.keras.layers.MaxPooling2D(pool_size=(2, 2)),
-            tf.keras.layers.Dropout(0.25),
-            tf.keras.layers.Flatten(),
-            tf.keras.layers.Dense(64, activation='relu'),
-            tf.keras.layers.Dropout(0.5),
-            tf.keras.layers.Dense(10, activation='softmax')
-        ])
+        
         return model
     
     def prepare_dataset(self, name):
@@ -164,6 +154,10 @@ class FLServer:
 
         assert train_dataset != None and test_dataset != None
         return train_dataset, test_dataset
+
+    #def prepare_dataloader(self):
+    #    train_loader = torch.utils.data.Dataloader()
+
 
 
     def split_dataset(self, experiment, num_samples):
