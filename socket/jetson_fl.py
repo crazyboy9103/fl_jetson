@@ -26,7 +26,9 @@ class FLClient:
                     if msg.flag == FLAGS.FLAG_SETUP:
                         self.respond_setup(msg) 
         except Exception as e:
-            print(e)
+            print("msg", msg)
+            print("msg data", msg.data)
+            print("Exception", e)
 
         
     
@@ -67,7 +69,7 @@ class FLClient:
             print(f"client {self.id} finished health check")
         
         except Exception as e:
-            print(e)
+            print("Exception", e)
             self.send_msg(flag=FLAGS.FLAG_HEALTH_CODE, data=FLAGS.RESULT_BAD)
 
     def respond_train(self, msg):
