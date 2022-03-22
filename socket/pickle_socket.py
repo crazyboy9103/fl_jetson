@@ -169,12 +169,12 @@ def recvall(socket, n):
     buffer_size = 1024
     while len(data) < n:
         #packet = socket.recv(n - len(data))
-        if n - len(data) > buffer_size:
-          packet = socket.recv(buffer_size)
-        else:
-          packet = socket.recv(n - len(data))
-
-        #packet = socket.recv(1)
+        #if n - len(data) > buffer_size:
+        #  packet = socket.recv(buffer_size)
+        #else:
+        #  packet = socket.recv(n - len(data))
+        
+        packet = socket.recv(1)
         if not packet:
             break
         data.extend(packet)
