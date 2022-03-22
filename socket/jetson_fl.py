@@ -12,18 +12,22 @@ class FLClient:
        
      
     def task(self):
-        while True:
-            msg = self.sock_client.recv()
+        try:
+            while True:
+                msg = self.sock_client.recv()
 
-            if msg.flag == FLAGS.TERMINATE:
-                return
+                if msg != None:
+                    if msg.flag == FLAGS.TERMINATE:
+                        return
 
-            if msg.flag == FLAGS.FLAG_START_TRAIN:
-                self.respond_train(msg)
+                    if msg.flag == FLAGS.FLAG_START_TRAIN:
+                        self.respond_train(msg)
 
-            if msg.flag == FLAGS.FLAG_SETUP:
-                self.respond_setup(msg) 
-        
+                    if msg.flag == FLAGS.FLAG_SETUP:
+                        self.respond_setup(msg) 
+        except Exception as e:
+            print(e)
+
         
     
     def respond_setup(self, msg):
