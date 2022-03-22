@@ -167,14 +167,13 @@ def recvall(socket, n):
     data = bytearray()
     cursor = 0
     buffer_size = 1024
-    while cursor < n:
+    while len(data) < n:
         #packet = socket.recv(n - len(data))
-        if n - cursor > buffer_size:
+        if n - len(data) > buffer_size:
           packet = socket.recv(buffer_size)
-          cursor += buffer_size
         else:
-          packet = socket.recv(n-cursor)
-          cursor = n
+          packet = socket.recv(n - len(data))
+
         #packet = socket.recv(1)
         if not packet:
             break
