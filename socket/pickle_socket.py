@@ -177,6 +177,6 @@ def recvall(socket, n):
           cursor = n
         #packet = socket.recv(1)
         if not packet:
-            return data
+            break
         data.extend(packet)
     return data
