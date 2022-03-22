@@ -38,16 +38,16 @@ class FLClient:
             # 2. builds model from json
 
             model_arch = data['arch']
-            import threading
-            lock = threading.Lock()
+            #import threading
+            #lock = threading.Lock()
             #model = tf.keras.models.model_from_json(model, custom_objects={"null":None}) 
             self.model = tf.keras.models.model_from_json(model_arch, custom_objects={"null":None})
 
-            print("model arch", model_arch)
+            #print("model arch", model_arch)
 
             # 3. compile model 
             optimizer, loss, metrics = tf.keras.optimizers.deserialize(data['optim']), tf.keras.losses.deserialize(data['loss']), data['metrics']
-            print("optim, loss, metrics", data['optim'], data["loss"], data["metrics"])
+            #print("optim, loss, metrics", data['optim'], data["loss"], data["metrics"])
             self.model.compile(optimizer=optimizer,loss=loss,metrics=metrics)
             
             # 4. test model
@@ -55,10 +55,10 @@ class FLClient:
             split_x_train, split_y_train = self.x_train[test_idxs], self.y_train[test_idxs]
 
             print(f"client {self.id} started test training")
-            print(len(split_x_train))
-            lock.acquire()
+            #print(len(split_x_train))
+            #lock.acquire()
             self.model.fit(split_x_train, split_y_train, epochs=1, batch_size=8, verbose=2)
-            lock.release()
+            #lock.release()
             self.send_msg(flag=FLAGS.FLAG_HEALTH_CODE, data=FLAGS.RESULT_OK)
         
         except Exception as e:
