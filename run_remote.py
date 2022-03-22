@@ -44,7 +44,7 @@ class Jetson:
     def start_fed(self, host, port):
         threads = []
         for i, (port, con) in enumerate(zip(self.jetson_ports, self.connections)):
-            command = f'docker exec client python3 /ambient_fl/socket/test_single_client.py --id {i} --host 147.47.200.209 --port 20000'
+            command = f'docker exec client python3 /home/fl_jetson/socket/test_single_client.py --id {i} --host 147.47.200.209 --port 20000'
             print(f'----------------{port}----------------')
             try:
                 t=threading.Thread(target=con.run,args=(command,))
@@ -70,26 +70,26 @@ if __name__ == "__main__":
     jetson.check() # 통신 전에 무조건 실행되야 함
     
     print("\n")
-    print("Kill all containers")
-    jetson.send_command("docker kill $(docker ps -q)")
-    print("...completed")
-    
-    print("\n")
-    print("Remove 'client' container")
-    jetson.send_command("docker rm client")
-    print("...completed")
-    
-    print("\n")
-    print("Pull latest image")
-    jetson.send_command("docker pull crazyboy9103/jetson_fl:latest")
-    print("...completed")
-    
-    print("\n")
-    print("Running the container")
-    jetson.send_command("docker run -d -ti --name client --gpus all --network host crazyboy9103/jetson_fl:latest")
+    print("Stop FL container")
+    jetson.send_command("docker stop jetson_fl")
     print("...completed")
 
     print("\n")
+    print("Start FL container")
+    jetson.send_command("docker start jetson_fl")
+    print("...completed")
+    
+    #print("\n")
+    #print("Pull latest image")
+    #jetson.send_command("docker pull crazyboy9103/jetson_fl:latest")
+    #print("...completed")
+    
+    #print("\n")
+    #print("Running the container")
+    #jetson.send_command("docker run -d -ti --name client --gpus all --network host crazyboy9103/jetson_fl:latest")
+    #print("...completed")
+
+    #print("\n")
     #print("Git pull")
     #jetson.send_command("docker exec client cd ambient_fl && git pull")
     #print("...completed")
@@ -97,6 +97,7 @@ if __name__ == "__main__":
     print("\n")
     print("Starting federated learning")
     jetson.start_fed(host=args.host, port=args.port) 
-    jetson.send_command("docker rm client")
+    
+    jetson.send_command("docker stop jetson_fl")
     print("Federated learning done")
     
