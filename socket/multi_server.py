@@ -328,7 +328,7 @@ class FLServer:
     def request_setup(self, id, clients_resultcode_dict):
         msg = Message(source=-1, flag=FLAGS.FLAG_SETUP, data={
             "dataset_name": self.dataset_name, 
-            "arch": self.model.to_json(),  
+            "arch": self.model.get_config(),  
             "optim": tf.keras.optimizers.serialize(self.optimizer), 
             "loss": tf.keras.losses.serialize(self.loss), 
             "metrics": self.metrics
