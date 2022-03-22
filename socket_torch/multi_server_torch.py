@@ -1,7 +1,7 @@
 from pickle_socket_torch import Server, Message, FLAGS, CLASSIFY_MODELS, DETECT_MODELS, DATASET
 import numpy as np
 import torch, torchvision
-import torchvision.models
+import torchvision.models as models
 import logging
 from datetime import datetime
 import threading
@@ -131,17 +131,7 @@ class FLServer:
             return 
         if model_type == DETECT_MODELS.SSD:
             return 
-        dataset_type = "mnist" if "mnist" in self.dataset_name else "cifar"
-        model = tf.keras.models.Sequential([
-            tf.keras.layers.Conv2D(filters=32, kernel_size=(3, 3), activation='relu', input_shape=self.INPUT_SHAPES[dataset_type]),
-            tf.keras.layers.Conv2D(filters=32, kernel_size=(3, 3), activation='relu'),
-            tf.keras.layers.MaxPooling2D(pool_size=(2, 2)),
-            tf.keras.layers.Dropout(0.25),
-            tf.keras.layers.Flatten(),
-            tf.keras.layers.Dense(64, activation='relu'),
-            tf.keras.layers.Dropout(0.5),
-            tf.keras.layers.Dense(10, activation='softmax')
-        ])
+        
         return model
     
     def prepare_dataset(self, name):
@@ -165,9 +155,12 @@ class FLServer:
         assert train_dataset != None and test_dataset != None
         return train_dataset, test_dataset
 
+    #def prepare_dataloader(self):
+    #    train_loader = torch.utils.data.Dataloader()
+
+
 
     def split_dataset(self, experiment, num_samples):
-        # Don't need x_train (which is big) for splitting the dataset
         min_label = min(self.train_dataset.targets)
         max_label = max(self.train_dataset.targets)
         if isinstance(min_label, torch.Tensor):
@@ -178,72 +171,59 @@ class FLServer:
         
         label_idxs = {label: [] for label in range(min_label, max_label+1)}
 
-        for idx, label in enumerate(dataset.targets):
+        for idx, label in enumerate(self.train_dataset.targets):
             if isinstance(label, torch.Tensor):
-            label = label.item()
+                label = label.item()
             
             label_idxs[label].append(idx)
         
-        train_idxs = {i:[] for i in range(size+1)}
-
-        for i, v in enumerate(self.y_train):
-            if isinstance(v, list) or isinstance(v, np.ndarray):
-                v = v[0]
-            train_idxs[v].append(i)
-
-        all_idxs = [id for id in range(len(self.y_train))]
+       
+        all_idxs = [idx for idx in range(len(self.train_dataset.targets))]
         client_data_idxs = {client["id"]: [] for client in self.server.clients}
 
-        num_labels = len(train_idxs)
+        num_labels = max_label+1
         if experiment == self.EXP_UNIFORM:
-            for i in range(num_labels):
-                indices = train_idxs[i]
-                for client in client_data_idxs:
+            for label in range(num_labels):
+                indices = label_idxs[label]
+                for client, data_idxs in client_data_idxs.items():
                     random_idxs = np.random.choice(indices, size=num_samples//num_labels, replace=True).tolist() #bootstrap
-                    client_data_idxs[client].extend(random_idxs)
-            
-            return client_data_idxs
+                    data_idxs.extend(random_idxs)
 
         if experiment == self.EXP_RANDOM_SAME_SIZE:
-            for client in client_data_idxs:
-                random_idxs = np.random.choice(all_idxs, size=num_samples).tolist()
-                client_data_idxs[client].extend(random_idxs)
+            for client, data_idxs in client_data_idxs.items():
+                random_idxs = np.random.choice(all_idxs, size=num_samples, replace=True).tolist()
+                data_idxs.extend(random_idxs)
 
-            return client_data_idxs
-        
         if experiment == self.EXP_RANDOM_DIFF_SIZE:
-            for i in range(num_labels):
-                for client in client_data_idxs:
-                    num_data_sample = np.random.randint(1, num_samples)
-                    random_idxs = np.random.choice(all_idxs, size=num_data_sample).tolist()
-                    client_data_idxs[client].extend(random_idxs)
-            return client_data_idxs
-        
+            for label in range(num_labels):
+                for client, data_idxs in client_data_idxs.items():
+                    random_idxs = np.random.choice(all_idxs, size=np.random.randint(1, num_samples//num_labels), replace=True).tolist()
+                    data_idxs.extend(random_idxs)
+
         if experiment == self.EXP_SKEWED:
-            all_labels = [i for i in range(num_labels)]
-            skewed_labels = np.random.choice(all_labels, np.random.randint(1, num_labels))
+            all_labels = [label for label in range(num_labels)]
+            skewed_labels = np.random.choice(all_labels, np.random.randint(1, num_labels), replace=False)
             non_skewed_labels = set(all_labels)-set(skewed_labels)
             
-            for i in skewed_labels:
-                for client in client_data_idxs:
-                    num_data = np.random.randint(int(0.1 * num_samples), num_samples)
-                    indices = train_idxs[i]
-                    random_idxs = np.random.choice(indices, size=num_data)
-                    client_data_idxs[client].extend(random_idxs)
+            for label in skewed_labels:
+                for client, data_idxs in client_data_idxs.items():
+                    num_data = np.random.randint(int(0.1 * num_samples//num_labels), int(0.3 * num_samples//num_labels))
+                    indices = label_idxs[label]
+                    random_idxs = np.random.choice(indices, size=num_data, replace=True)
+                    data_idxs.extend(random_idxs)
             
-            for i in non_skewed_labels:
-                for client in client_data_idxs:
-                    num_data = np.random.randint(int(0.8 * num_samples), num_samples)
-                    indices = train_idxs[i]
-                    random_idxs = np.random.choice(indices, size=num_data)
-                    client_data_idxs[client].extend(random_idxs)
+            for label in non_skewed_labels:
+                for client, data_idxs in client_data_idxs.items():
+                    num_data = np.random.randint(int(0.8 * num_samples//num_labels), num_samples//num_labels)
+                    indices = label_idxs[label]
+                    random_idxs = np.random.choice(indices, size=num_data, replace=True)
+                    data_idxs.extend(random_idxs)
            
-            return client_data_idxs
+        return client_data_idxs
 
 
     def request_terminate(self, id):
-        msg = Message(source=-1, flag=FLAGS.TERMINATE)
-        self.server.send(id, msg)
+        self.server.send_msg(id=id, flag=FLAGS.TERMINATE, data=None)
         
     def request_train(self, id, epochs, batch_size, clients_param_dict):
         msg = Message(source=-1, flag=FLAGS.START_TRAIN, data={
@@ -254,9 +234,15 @@ class FLServer:
         })
         assert len(msg) != 0, "Message must contain data"
         print("server model parameter size %.2f MB" % (msg.__sizeof__()))
-        self.server.send(id, msg) # uses connection with client and send msg to the client
+        self.server.send_msg(id=id, flag=FLAGS.START_TRAIN, data={
+            "epochs": epochs, 
+            "batch_size": batch_size,
+            "data_idxs": self.client_data_idxs[id], 
+            "param": list(map(lambda layer: layer.tolist(), self.model.get_weights()))
+        })
+         # uses connection with client and send msg to the client
         recv_msg = self.server.recv(id)
-        param = recv_msg.data
+        param = recv_msg.get_data()
         param = list(map(lambda layer: np.array(layer), param))
         clients_param_dict[id] = param
         return param
@@ -320,7 +306,6 @@ class FLServer:
         threads = []
 
         for id in range(max_clients):
-            #result_code = self.request_setup(id)
             thread = threading.Thread(target=self.request_setup, args=(id, clients_resultcode_dict,))
             threads.append(thread)
             thread.start()

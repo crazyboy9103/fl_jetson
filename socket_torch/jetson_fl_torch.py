@@ -1,18 +1,40 @@
-from pickle_socket_torch import Client, Message, FLAGS, CLASSIFY_MODELS, DETECT_MODELS
+from pickle_socket_torch import Client, Message, FLAGS, CLASSIFY_MODELS, DETECT_MODELS, DATASET
 import torch, torchvision
 import torchvision.models as models
 import numpy as np
-
-
+import logging
+import sys
 class FLClient:
     def __init__(self, id, host = 'localhost', port = 20000):
         self.id = id
         self.host = host
         self.port = port
+        self.logger = self.build_logger("client_log") 
         self.sock_client = Client()
         self.sock_client.connect(id, host, port)
-       
-     
+        self.logger.info(f"Connected to {host}:{port} as client {id}")
+
+    def build_logger(self, name):
+        logger = logging.getLogger('log_custom')
+        logger.setLevel(logging.CRITICAL)
+
+        formatter = logging.Formatter("%(asctime)s;[%(levelname)s];%(message)s",
+                              "%Y-%m-%d %H:%M:%S")
+        
+        streamHandler = logging.StreamHandler()
+        streamHandler.setFormatter(formatter)
+        streamHandler.setLevel(logging.CRITICAL)
+        logger.addHandler(streamHandler)
+
+        fileHandler = logging.FileHandler(f'{name}.txt', mode = "a")
+        fileHandler.setFormatter(formatter)
+        fileHandler.setLevel(logging.CRITICAL)
+        logger.addHandler(fileHandler)
+        
+        logger.propagate = False
+        return logger
+           
+    
     def task(self):
         while True:
             msg = self.sock_client.recv()
@@ -28,60 +50,69 @@ class FLClient:
         
         
     def repsond_terminate(self):
-        return 
+        self.logger.info(f"connection to {self.host}:{self.port} terminated")
+        sys.exit()
 
     def respond_setup(self, msg):
+        self.logger.info(f"client {self.id} setup started")
         print(f"client {self.id} setup started")
         try:
             # 1. gets dataset
-            data = msg.data
-            dataset_name = data['dataset_name']
-            (self.x_train, self.y_train), (self.x_test, self.y_test) = self.prepare_dataset(dataset_name)
-           
+            dataset_name, model, optim, loss = msg.get_data()
+            self.logger.info(f"client {self.id} config downloaded")
+            
+            self.trainset, self.testset = self.prepare_dataset(dataset_name)
+            self.logger.info(f"client {self.id} dataset prepared")
            
             # 2. builds model from json
-
-            model_arch = data['arch']
-            import threading
-            lock = threading.Lock()
+#            import threading
+#            lock = threading.Lock()
             #model = tf.keras.models.model_from_json(model, custom_objects={"null":None}) 
-            self.model = tf.keras.models.model_from_json(model_arch, custom_objects={"null":None})
-
-            print("model arch", model_arch)
+            self.model = tf.keras.models.model_from_json(model, custom_objects={"null":None})
+            self.logger.info(f"client {self.id} model built")
 
             # 3. compile model 
-            optimizer, loss, metrics = tf.keras.optimizers.deserialize(data['optim']), tf.keras.losses.deserialize(data['loss']), data['metrics']
-            print("optim, loss, metrics", data['optim'], data["loss"], data["metrics"])
-            self.model.compile(optimizer=optimizer,loss=loss,metrics=metrics)
+            self.model.compile(optimizer=optim,loss=loss)
+            self.model.train()
             
             # 4. test model
             test_idxs = np.random.choice(len(self.x_train), 100)
             split_x_train, split_y_train = self.x_train[test_idxs], self.y_train[test_idxs]
-
+            self.logger.info(f"client {self.id} test training started")
             print(f"client {self.id} started test training")
-            print(len(split_x_train))
-            lock.acquire()
+#            lock.acquire()
             self.model.fit(split_x_train, split_y_train, epochs=1, batch_size=8, verbose=2)
-            lock.release()
-            self.sock_client.send_msg(source=self.id, flag=FLAGS.HEALTH_CODE, data=FLAGS.RESULT_OK)
+#            lock.release()
+            self.send_msg(flag=FLAGS.SETUP, data=FLAGS.RESULT_OK)
         
         except Exception as e:
-            print(e)
-            self.sock_client.send_msg(source=self.id, flag=FLAGS.HEALTH_CODE, data=FLAGS.RESULT_BAD)
+            self.logger.critical(f"client {self.id} failed setup")
+            self.logger.critical(e)
+
+            self.send_msg(flag=FLAGS.SETUP, data=FLAGS.RESULT_BAD)
 
     def respond_train(self, msg):
-        print(f"client {self.id} training started")
-        data = msg.data
-        data_idxs = data['data_idxs']
-        param = data['param']
-        epochs = data['epochs']
-        batch_size = data['batch_size']
+        try:
+            print(f"client {self.id} training started")
 
-        self.train_model(data_idxs, param, epochs, batch_size)
-        
-        self.sock_client.send_msg(source=self.id, flag=FLAGS.START_TRAIN, data=)
-        print(f"client {self.id} training completed")
+            self.logger.info(f"client {self.id} training started")
+            
+            epochs, batch_size, data_idxs, param = msg.get_data()
 
+            self.train_model(data_idxs, param, epochs, batch_size)
+            self.send_msg(flag=FLAGS.START_TRAIN, data=updated_param)
+
+            print(f"client {self.id} training completed")
+
+            self.logger.info(f"client {self.id} training completed")
+
+        except Exception as e:
+            print(f"client {self.id} training failed")
+
+            self.logger.critical(f"client {self.id} training failed")
+            self.logger.critical(e)
+            
+            self.send_msg(flag=FLAGS.START_TRAIN, data=FLAGS.RESULT_BAD)
 
     def prepare_dataset(self, name):
         if name == DATASET.MNIST:
@@ -92,9 +123,21 @@ class FLClient:
         
         if name == DATASET.COCO:
 
-
+        
+        return trainset, testset
     
 
+    def build_model(self, model_name):
+        if model_name == CLASSIFY_MODELS.MOBILENETV2:
+            model = models.mobilenet_v2()
+        if model_name == CLASSIFY_MODELS.RESNET18:
+            model = models.resnet18()
+        if model_name == CLASSIFY_MODELS.VGG16:
+            model = models.vgg16()
+        if model_name == DETECT_MODELS.SSD:
+            model = models.detection.ssd()
+        if model_name == DETECT_MODELS.SSDLITE:
+            model = models.detection.ssdlite()
 
 
 
