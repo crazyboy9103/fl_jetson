@@ -44,7 +44,7 @@ class Jetson:
     def start_fed(self, host, port):
         threads = []
         for i, (port, con) in enumerate(zip(self.jetson_ports, self.connections)):
-            command = f'docker exec client python3 /home/fl_jetson/socket/test_single_client.py --id {i} --host 147.47.200.209 --port 20000'
+            command = f'docker exec jetson_fl python3 /home/fl_jetson/socket/test_single_client.py --id {i} --host 147.47.200.209 --port 20000'
             print(f'----------------{port}----------------')
             try:
                 t=threading.Thread(target=con.run,args=(command,))
