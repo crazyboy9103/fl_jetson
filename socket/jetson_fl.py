@@ -3,7 +3,7 @@ import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import tensorflow as tf
 import numpy as np
-#import yaml
+
 class FLClient:
     def __init__(self, id, host = 'localhost', port = 20000):
         self.id = id
@@ -28,10 +28,6 @@ class FLClient:
                     if msg.flag == FLAGS.FLAG_SETUP:
                         self.respond_setup(msg) 
         except Exception as e:
-            #print("msg", msg)
-            #print("msg data", msg.data)
-            #if msg:
-            #    print("msg", msg.flag)
             print("Exception", e)
 
         
@@ -46,20 +42,14 @@ class FLClient:
            
            
             # 2. builds model from json
-
             model_arch = data['arch']
-            #import threading
-            #lock = threading.Lock()
-            #model = tf.keras.models.model_from_json(model, custom_objects={"null":None}) 
             try:
                 self.model = tf.keras.Sequential().from_config(model_arch) #, custom_objects={"null":None})
             except:
                 self.model = tf.keras.Model().from_config(model_arch)
-            #print("model arch", model_arch)
 
             # 3. compile model 
             optimizer, loss, metrics = tf.keras.optimizers.deserialize(data['optim']), tf.keras.losses.deserialize(data['loss']), data['metrics']
-            #print("optim, loss, metrics", data['optim'], data["loss"], data["metrics"])
             self.model.compile(optimizer=optimizer,loss=loss,metrics=metrics)
             
             # 4. test model
@@ -67,10 +57,7 @@ class FLClient:
             split_x_train, split_y_train = self.x_train[test_idxs], self.y_train[test_idxs]
 
             print(f"client {self.id} started health check")
-            #print(len(split_x_train))
-            #lock.acquire()
             self.model.fit(split_x_train, split_y_train, epochs=1, batch_size=8, verbose=2)
-            #lock.release()
             self.send_msg(flag=FLAGS.FLAG_HEALTH_CODE, data=FLAGS.RESULT_OK)
             print(f"client {self.id} finished health check")
         
@@ -81,14 +68,12 @@ class FLClient:
     def respond_train(self, msg):
         print(f"client {self.id} training started")
         data = msg.data
-        #print("data keys", data.keys())
         data_idxs = data['data_idxs']
         param = data['param']
         epochs = data['epochs']
         batch_size = data['batch_size']
 
         self.train_model(data_idxs, param, epochs, batch_size)
-        
         self.send_msg(flag=FLAGS.FLAG_START_TRAIN, data=list(map(lambda layer: layer.tolist(), self.model.get_weights())))
         print(f"client {self.id} training completed")
     def prepare_dataset(self, name):
