@@ -1,7 +1,7 @@
 from pickle_socket import Client, Message, FLAGS
 import tensorflow as tf
 import numpy as np
-import yaml
+#import yaml
 class FLClient:
     def __init__(self, id, host = 'localhost', port = 20000):
         self.id = id
@@ -9,7 +9,7 @@ class FLClient:
         self.port = port
         self.sock_client = Client()
         self.sock_client.connect(id, host, port)
-       
+        self.model = None
      
     def task(self):
         try:
