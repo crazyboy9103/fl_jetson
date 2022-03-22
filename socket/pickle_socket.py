@@ -154,7 +154,7 @@ def _send(socket, data):
   socket.sendall(data)
 
 def _recv(socket):
-  raw_msglen = recvall(socket, 8)
+  raw_msglen = recvall(socket, 4)
   #raw_msglen = recvall(socket, 4)
   if not raw_msglen:
       return None
@@ -166,7 +166,8 @@ def recvall(socket, n):
     # Helper function to recv n bytes or return None if EOF is hit
     data = bytearray()
     while len(data) < n:
-        packet = socket.recv(n - len(data))
+        #packet = socket.recv(n - len(data))
+        packet = socket.recv(1)
         if not packet:
             return None
         data.extend(packet)
