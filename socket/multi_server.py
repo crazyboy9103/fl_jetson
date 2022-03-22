@@ -326,15 +326,15 @@ class FLServer:
         return f"{len(self.server.clients)}/{max_clients} healthy"
 
     def request_setup(self, id, clients_resultcode_dict):
-        model_yaml = self.model.to_yaml()
+        model_config = self.model.get_config()
         msg = Message(source=-1, flag=FLAGS.FLAG_SETUP, data={
             "dataset_name": self.dataset_name, 
-            "arch": model_yaml,  
+            "arch": model_config,  
             "optim": tf.keras.optimizers.serialize(self.optimizer), 
             "loss": tf.keras.losses.serialize(self.loss), 
             "metrics": self.metrics
         })
-        print("model arch", model_yaml)
+        print("model arch", model_config)
         print("server settings size %.2f MB" % (msg.__sizeof__()))
         assert len(msg) != 0, "Message must contain data"
         self.server.send(id, msg)

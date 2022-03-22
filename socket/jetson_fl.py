@@ -1,7 +1,7 @@
 from pickle_socket import Client, Message, FLAGS
 import tensorflow as tf
 import numpy as np
-import yaml
+#import yaml
 class FLClient:
     def __init__(self, id, host = 'localhost', port = 20000):
         self.id = id
@@ -50,7 +50,7 @@ class FLClient:
             #lock = threading.Lock()
             #model = tf.keras.models.model_from_json(model, custom_objects={"null":None}) 
 
-            self.model = tf.keras.models.model_from_yaml(model_arch) #, custom_objects={"null":None})
+            self.model = tf.keras.models.model_from_config(model_arch) #, custom_objects={"null":None})
 
             #print("model arch", model_arch)
 
