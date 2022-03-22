@@ -85,8 +85,9 @@ class FLClient:
         batch_size = data['batch_size']
 
         self.train_model(data_idxs, param, epochs, batch_size)
-        
-        self.send_msg(FLAGS.FLAG_START_TRAIN, data=list(map(lambda layer: layer.tolist(), self.model.get_weights())))
+        self.send_msg(FLAGS.FLAG_START_TRAIN, data=self.model.get_weights())
+
+        #self.send_msg(FLAGS.FLAG_START_TRAIN, data=list(map(lambda layer: layer.tolist(), self.model.get_weights())))
         print(f"client {self.id} training completed")
     def prepare_dataset(self, name):
         if name == "mnist":
