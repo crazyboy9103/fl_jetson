@@ -49,7 +49,7 @@ class FLClient:
             #import threading
             #lock = threading.Lock()
             #model = tf.keras.models.model_from_json(model, custom_objects={"null":None}) 
-    
+
             self.model = tf.keras.Sequential().from_config(model_arch) #, custom_objects={"null":None})
 
             #print("model arch", model_arch)
@@ -72,7 +72,7 @@ class FLClient:
             print(f"client {self.id} finished health check")
         
         except Exception as e:
-            print("Exception", e)
+            print("Exception setup", e)
             self.send_msg(flag=FLAGS.FLAG_HEALTH_CODE, data=FLAGS.RESULT_BAD)
 
     def respond_train(self, msg):
