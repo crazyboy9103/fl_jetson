@@ -30,8 +30,8 @@ class FLClient:
         except Exception as e:
             #print("msg", msg)
             #print("msg data", msg.data)
-            if msg:
-                print("msg", msg.flag)
+            #if msg:
+            #    print("msg", msg.flag)
             print("Exception", e)
 
         
