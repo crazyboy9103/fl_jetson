@@ -167,8 +167,12 @@ def recvall(socket, n):
     data = bytearray()
     while len(data) < n:
         #packet = socket.recv(n - len(data))
-        packet = socket.recv(1)
+        if n - len(data) > 1024:
+          packet = socket.recv(1024)
+        else:
+          packet = socket.recv(n-len(data))
+        #packet = socket.recv(1)
         if not packet:
-            return None
+            return data
         data.extend(packet)
     return data
