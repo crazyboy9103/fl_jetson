@@ -68,6 +68,7 @@ class Server(object):
       if client["id"] == id:
         return idx
     return None 
+    
   def __del__(self):
     for client in self.clients:
       client["client"].close()
