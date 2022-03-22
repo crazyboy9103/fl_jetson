@@ -149,7 +149,7 @@ class Client(object):
 
 ## helper functions ##
 def _send(socket, data):
-  data = pickle.dumps(data, protocol=3)
+  data = pickle.dumps(data)#, protocol=3)
   data = pack('>I', len(data)) + data
   socket.sendall(data)
 
