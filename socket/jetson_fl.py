@@ -54,12 +54,13 @@ class FLClient:
             test_idxs = np.random.choice(len(self.x_train), 100)
             split_x_train, split_y_train = self.x_train[test_idxs], self.y_train[test_idxs]
 
-            print(f"client {self.id} started test training")
+            print(f"client {self.id} started health check")
             #print(len(split_x_train))
             #lock.acquire()
             self.model.fit(split_x_train, split_y_train, epochs=1, batch_size=8, verbose=2)
             #lock.release()
             self.send_msg(flag=FLAGS.FLAG_HEALTH_CODE, data=FLAGS.RESULT_OK)
+            print(f"client {self.id} finished health check")
         
         except Exception as e:
             print(e)
@@ -68,6 +69,7 @@ class FLClient:
     def respond_train(self, msg):
         print(f"client {self.id} training started")
         data = msg.data
+        print("data keys", data.keys())
         data_idxs = data['data_idxs']
         param = data['param']
         epochs = data['epochs']
