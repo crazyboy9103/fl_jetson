@@ -230,10 +230,10 @@ class FLServer:
             "param": list(map(lambda layer: layer.tolist(), self.model.get_weights()))
         })
         assert len(msg) != 0, "Message must contain data"
-        print("server model parameter size %.2f MB" % (msg.__sizeof__()))
+        #print("server model parameter size %.2f MB" % (msg.__sizeof__()))
         self.server.send(id, msg) # uses connection with client and send msg to the client
         recv_msg = self.server.recv(id)
-        print("received client parameter of size %.2f MB" % (recv_msg.__sizeof__()))
+        print("client %d sent parameter of size %.2f MB" % (id, recv_msg.__sizeof__()))
         param = recv_msg.data
         param = list(map(lambda layer: np.array(layer), param))
         clients_param_dict[id] = param
