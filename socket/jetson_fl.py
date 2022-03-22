@@ -26,8 +26,9 @@ class FLClient:
                     if msg.flag == FLAGS.FLAG_SETUP:
                         self.respond_setup(msg) 
         except Exception as e:
-            print("msg", msg)
-            print("msg data", msg.data)
+            #print("msg", msg)
+            #print("msg data", msg.data)
+            print("msg", msg.flag)
             print("Exception", e)
 
         
