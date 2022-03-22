@@ -51,9 +51,10 @@ class FLClient:
             #import threading
             #lock = threading.Lock()
             #model = tf.keras.models.model_from_json(model, custom_objects={"null":None}) 
-
-            self.model = tf.keras.Sequential().from_config(model_arch) #, custom_objects={"null":None})
-
+            try:
+                self.model = tf.keras.Sequential().from_config(model_arch) #, custom_objects={"null":None})
+            except:
+                self.model = tf.keras.Model().from_config(model_arch)
             #print("model arch", model_arch)
 
             # 3. compile model 
