@@ -61,7 +61,7 @@ class Server(object):
   def __init__(self, host, port, max_con):
     self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     self.socket.bind((host, port))
-    self.socket.listen()
+    self.socket.listen(max_con)
 
   def client_id_to_idx(self, id):
     for idx, client in enumerate(self.clients):

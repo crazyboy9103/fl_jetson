@@ -19,7 +19,7 @@ class FLServer:
     def __init__(self, host, port):
         self.host = host
         self.port = port
-        self.server = Server(host, port, max_con=5)
+        self.server = Server(host, port, max_con=10)
         self.curr_round = 0
         
 
