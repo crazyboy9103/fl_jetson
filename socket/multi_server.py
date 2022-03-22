@@ -334,7 +334,7 @@ class FLServer:
             "loss": tf.keras.losses.serialize(self.loss), 
             "metrics": self.metrics
         })
-        print("model arch", model_config)
+        #print("model arch", model_config)
         print("server settings size %.2f MB" % (msg.__sizeof__()))
         assert len(msg) != 0, "Message must contain data"
         self.server.send(id, msg)

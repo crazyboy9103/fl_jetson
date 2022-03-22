@@ -81,7 +81,7 @@ class FLClient:
     def respond_train(self, msg):
         print(f"client {self.id} training started")
         data = msg.data
-        print("data keys", data.keys())
+        #print("data keys", data.keys())
         data_idxs = data['data_idxs']
         param = data['param']
         epochs = data['epochs']

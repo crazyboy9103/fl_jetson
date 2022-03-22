@@ -165,12 +165,16 @@ def _recv(socket):
 def recvall(socket, n):
     # Helper function to recv n bytes or return None if EOF is hit
     data = bytearray()
-    while len(data) < n:
+    cursor = 0
+    buffer_size = 1024
+    while cursor < n:
         #packet = socket.recv(n - len(data))
-        if n - len(data) > 1024:
-          packet = socket.recv(1024)
+        if n - cursor > buffer_size:
+          packet = socket.recv(buffer_size)
+          cursor += buffer_size
         else:
-          packet = socket.recv(n-len(data))
+          packet = socket.recv(n-cursor)
+          cursor = n
         #packet = socket.recv(1)
         if not packet:
             return data
