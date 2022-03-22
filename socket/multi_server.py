@@ -190,7 +190,7 @@ class FLServer:
         if experiment == self.EXP_RANDOM_DIFF_SIZE:
             for i in range(num_labels):
                 for client in client_data_idxs:
-                    num_data_sample = np.random.randint(1, num_samples)
+                    num_data_sample = np.random.randint(1, num_samples//num_labels)
                     random_idxs = np.random.choice(all_idxs, size=num_data_sample).tolist()
                     client_data_idxs[client].extend(random_idxs)
             return client_data_idxs
@@ -202,14 +202,14 @@ class FLServer:
             
             for i in skewed_labels:
                 for client in client_data_idxs:
-                    num_data = np.random.randint(int(0.1 * num_samples), num_samples)
+                    num_data = np.random.randint(int(0.1 * num_samples//num_labels), num_samples//num_labels)
                     indices = train_idxs[i]
                     random_idxs = np.random.choice(indices, size=num_data)
                     client_data_idxs[client].extend(random_idxs)
             
             for i in non_skewed_labels:
                 for client in client_data_idxs:
-                    num_data = np.random.randint(int(0.8 * num_samples), num_samples)
+                    num_data = np.random.randint(int(0.8 * num_samples//num_labels), num_samples//num_labels)
                     indices = train_idxs[i]
                     random_idxs = np.random.choice(indices, size=num_data)
                     client_data_idxs[client].extend(random_idxs)
