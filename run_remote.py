@@ -86,7 +86,7 @@ if __name__ == "__main__":
     
     print("\n")
     print("Running the container")
-    jetson.send_command("docker run -d -ti --name client --gpus all crazyboy9103/jetson_fl:latest")
+    jetson.send_command("docker run -d -ti --name client --gpus all --network host crazyboy9103/jetson_fl:latest")
     print("...completed")
 
     print("\n")

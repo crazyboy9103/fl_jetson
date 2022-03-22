@@ -233,6 +233,7 @@ class FLServer:
         print("server model parameter size %.2f MB" % (msg.__sizeof__()))
         self.server.send(id, msg) # uses connection with client and send msg to the client
         recv_msg = self.server.recv(id)
+        print("received client parameter of size %.2f MB" % (recv_msg.__sizeof__()))
         param = recv_msg.data
         param = list(map(lambda layer: np.array(layer), param))
         clients_param_dict[id] = param
