@@ -154,7 +154,8 @@ def _send(socket, data):
   socket.sendall(data)
 
 def _recv(socket):
-  raw_msglen = recvall(socket, 4)
+  raw_msglen = recvall(socket, 8)
+  #raw_msglen = recvall(socket, 4)
   if not raw_msglen:
       return None
   msglen = unpack('>I', raw_msglen)[0]
