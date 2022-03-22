@@ -337,6 +337,7 @@ class FLServer:
         assert len(msg) != 0, "Message must contain data"
         self.server.send(id, msg)
         recv_msg = self.server.recv(id)
+        print("response from client %d" % (id))
         result_code = recv_msg.data
         clients_resultcode_dict[id] = result_code
         #print(f"request train client {id}")
