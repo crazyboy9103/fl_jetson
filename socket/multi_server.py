@@ -51,8 +51,7 @@ class FLServer:
             self.logger.info(f"Round {self.curr_round}/{self.max_round}")
         
         else:
-            for client in self.server.clients:
-                client_id = client["id"]
+            for client_id in self.server.clients:
                 self.request_terminate(client_id)
             self.logger.info("Finished FL task")
             return 
@@ -161,7 +160,7 @@ class FLServer:
             train_idxs[v].append(i)
 
         all_idxs = [id for id in range(len(self.y_train))]
-        client_data_idxs = {client["id"]: [] for client in self.server.clients}
+        client_data_idxs = {id: [] for id in self.server.clients}
 
         num_labels = len(train_idxs)
         if experiment == self.EXP_UNIFORM:
@@ -301,12 +300,11 @@ class FLServer:
 
         for id, result_code in clients_resultcode_dict.items():
             healthy = result_code == FLAGS.RESULT_OK
-            idx = self.server.client_id_to_idx(id)
             if healthy:
-                self.logger.info(f"client {id} address {self.server.clients[idx]['addr']} healthy")
+                self.logger.info(f"client {id} address {self.server.clients[id]['addr']} healthy")
 
             else:
-                self.logger.info(f"client {id} address {self.server.clients[idx]['addr']} not healthy")
+                self.logger.info(f"client {id} address {self.server.clients[id]['addr']} not healthy")
                 self.request_terminate(id)
                 self.server.close(id)
                 
@@ -346,8 +344,7 @@ class FLServer:
         clients_acc_dict = {} 
         
         threads = []
-        for client in self.server.clients:
-            client_id = client["id"]
+        for client_id in self.server.clients:
             thread = threading.Thread(target=self.request_train, args =(client_id, epochs, batch_size, clients_param_dict,))
             threads.append(thread)
             thread.start()
@@ -357,8 +354,7 @@ class FLServer:
 
         threads = []
 
-        for client in self.server.clients:
-            client_id = client["id"]
+        for client_id in self.server.clients:
             param = clients_param_dict[client_id]
             thread = threading.Thread(target=self.evaluate_param, args = (client_id, param, clients_acc_dict, ))
             threads.append(thread)
