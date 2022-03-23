@@ -22,10 +22,10 @@ class FLClient:
                     if msg.flag == FLAGS.TERMINATE:
                         return
 
-                    if msg.flag == FLAGS.FLAG_START_TRAIN:
+                    if msg.flag == FLAGS.START_TRAIN:
                         self.respond_train(msg)
 
-                    if msg.flag == FLAGS.FLAG_SETUP:
+                    if msg.flag == FLAGS.SETUP:
                         self.respond_setup(msg) 
         except Exception as e:
             print("Exception", e)
@@ -58,12 +58,12 @@ class FLClient:
 
             print(f"client {self.id} started health check")
             self.model.fit(split_x_train, split_y_train, epochs=1, batch_size=8, verbose=2)
-            self.send_msg(flag=FLAGS.FLAG_HEALTH_CODE, data=FLAGS.RESULT_OK)
+            self.send_msg(flag=FLAGS.HEALTH_CODE, data=FLAGS.RESULT_OK)
             print(f"client {self.id} finished health check")
         
         except Exception as e:
             print("Exception setup", e)
-            self.send_msg(flag=FLAGS.FLAG_HEALTH_CODE, data=FLAGS.RESULT_BAD)
+            self.send_msg(flag=FLAGS.HEALTH_CODE, data=FLAGS.RESULT_BAD)
 
     def respond_train(self, msg):
         print(f"client {self.id} training started")
@@ -74,7 +74,7 @@ class FLClient:
         batch_size = data['batch_size']
 
         self.train_model(data_idxs, param, epochs, batch_size)
-        self.send_msg(flag=FLAGS.FLAG_START_TRAIN, data=list(map(lambda layer: layer.tolist(), self.model.get_weights())))
+        self.send_msg(flag=FLAGS.START_TRAIN, data=list(map(lambda layer: layer.tolist(), self.model.get_weights())))
         print(f"client {self.id} training completed")
     def prepare_dataset(self, name):
         if name == "mnist":

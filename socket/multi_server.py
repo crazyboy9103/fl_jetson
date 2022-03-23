@@ -44,26 +44,22 @@ class FLServer:
         return logger
 
     def task(self):
-        print("Start FedAvg")
         self.logger.info("Start FedAvg")
         # Check round
         if self.curr_round < self.max_round:
             self.curr_round += 1
             self.logger.info(f"Round {self.curr_round}/{self.max_round}")
-            print(f"Round {self.curr_round}/{self.max_round}")
         
         else:
             for client in self.server.clients:
                 client_id = client["id"]
                 self.request_terminate(client_id)
             self.logger.info("Finished FL task")
-            print("Finished FL task")
             return 
 
         # Split dataset 
         self.client_data_idxs = self.split_dataset(self.experiment, self.num_samples)  
         self.logger.info("Started FL task")
-        print("Started FL task")
         
         # Gets trained parameters, accuracies
         params, accs = self.train_once(self.epochs, self.batch_size)
@@ -71,8 +67,7 @@ class FLServer:
         # record accs in log
         for id in range(len(accs)):
             self.logger.info(f"client {id} acc {accs[id]}")
-            print(f"client {id} acc {accs[id]}")
-            
+
         # FedAvg Algorithm
         N = sum(map(lambda idxs: len(idxs), self.client_data_idxs.values())) 
         for id, idxs in self.client_data_idxs.items():
@@ -93,7 +88,7 @@ class FLServer:
         for id, param in params.items():
             n = len(self.client_data_idxs[id])
             self.logger.info(f"client {id}, {n} training data samples")
-            print(f"client {id}, {n} training data samples")
+
             for i, layer in enumerate(param):
                 weighted_param = (n / N) * layer
                 
@@ -116,8 +111,6 @@ class FLServer:
         self.model.set_weights(weights)
         acc = self.evaluate_param(id=-1, param=weights, clients_acc_dict={})
         self.logger.info(f"Server acc {acc}")
-        print(f"Server acc {acc}")
-
         return self.task()
         
 
@@ -223,7 +216,7 @@ class FLServer:
         
             
     def request_train(self, id, epochs, batch_size, clients_param_dict):
-        msg = Message(source=-1, flag=FLAGS.FLAG_START_TRAIN, data={
+        msg = Message(source=-1, flag=FLAGS.START_TRAIN, data={
             "epochs": epochs, 
             "batch_size": batch_size,
             "data_idxs": self.client_data_idxs[id], 
@@ -311,11 +304,9 @@ class FLServer:
             idx = self.server.client_id_to_idx(id)
             if healthy:
                 self.logger.info(f"client {id} address {self.server.clients[idx]['addr']} healthy")
-                print(f"client {id} address {self.server.clients[idx]['addr']} healthy")
 
             else:
                 self.logger.info(f"client {id} address {self.server.clients[idx]['addr']} not healthy")
-                print(f"client {id} address {self.server.clients[idx]['addr']} not healthy")
                 self.request_terminate(id)
                 self.server.close(id)
                 
@@ -327,7 +318,7 @@ class FLServer:
 
     def request_setup(self, id, clients_resultcode_dict):
         model_config = self.model.get_config()
-        msg = Message(source=-1, flag=FLAGS.FLAG_SETUP, data={
+        msg = Message(source=-1, flag=FLAGS.SETUP, data={
             "dataset_name": self.dataset_name, 
             "arch": model_config,  
             "optim": tf.keras.optimizers.serialize(self.optimizer), 

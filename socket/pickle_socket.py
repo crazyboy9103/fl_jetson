@@ -3,15 +3,13 @@ from struct import pack, unpack
 from enum import Enum
 
 class FLAGS(Enum):
-  FLAG_SETUP = 0
-  FLAG_START_TRAIN = 1
-  FLAG_HEALTH_CODE = 2
-  FLAG_TERMINATE = 3
+  SETUP = 0
+  START_TRAIN = 1
+  HEALTH_CODE = 2
+  TERMINATE = 3
 
   RESULT_OK = 3
   RESULT_BAD = 4
-  
-  TERMINATE = 8
 
 import sys
 
@@ -74,9 +72,8 @@ class Server(object):
       client["client"].close()
 
   def accept(self, id):
-    for client in self.clients:
-      if client["id"] == id:
-        client["client"].close()
+    if self.client_id_to_idx(id) != None: # if client with such id already exists
+      self.close(id) # close connection to the client with the id 
 
     client, client_addr = self.socket.accept()
     temp = {}
@@ -86,14 +83,14 @@ class Server(object):
     self.clients.append(temp)
 
   def send(self, id, data):
-    if id not in [client["id"] for client in self.clients]:
+    if self.client_id_to_idx(id) == None:
       self.accept(id)
 
     idx = self.client_id_to_idx(id)
     _send(self.clients[idx]['client'], data)
   
   def recv(self, id):
-    if id not in [client["id"] for client in self.clients]:
+    if self.client_id_to_idx(id) == None:
       raise Exception('Cannot receive data, no client is connected')
     
     idx = self.client_id_to_idx(id)
@@ -104,9 +101,6 @@ class Server(object):
     self.clients[idx]['client'].close()
     del self.clients[idx]
 
-    #if self.socket:
-    #  self.socket.close()
-    #  self.socket = None
   def close_socket(self):
     if self.socket:
       self.socket.close()
@@ -146,6 +140,7 @@ class Client(object):
       self.socket.close()
       self.socket = None
 
+### TODO: Fix below to use buffer size 1024 to recv data
 
 ## helper functions ##
 def _send(socket, data):
