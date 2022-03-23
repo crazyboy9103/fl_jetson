@@ -55,51 +55,41 @@ class Message(object):
   
 
 class Server(object):
-  clients = []
+  clients = {}
   def __init__(self, host, port, max_con):
     self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     self.socket.bind((host, port))
     self.socket.listen(max_con)
 
-  def client_id_to_idx(self, id):
-    for idx, client in enumerate(self.clients):
-      if client["id"] == id:
-        return idx
-    return None 
     
   def __del__(self):
-    for client in self.clients:
+    for id, client in self.clients.items():
       client["client"].close()
 
   def accept(self, id):
-    if self.client_id_to_idx(id) != None: # if client with such id already exists
+    if id in self.clients:
       self.close(id) # close connection to the client with the id 
 
     client, client_addr = self.socket.accept()
-    temp = {}
-    temp["id"] = id
-    temp["client"] = client
-    temp["addr"] = client_addr
-    self.clients.append(temp)
+    self.clients[id] = {}
+    self.clients[id]["client"] = client
+    self.clients[id]["addr"] = client_addr
 
   def send(self, id, data):
-    if self.client_id_to_idx(id) == None:
+    if id not in self.clients:
       self.accept(id)
 
-    idx = self.client_id_to_idx(id)
-    _send(self.clients[idx]['client'], data)
+    _send(self.clients[id]['client'], data)
   
   def recv(self, id):
-    if self.client_id_to_idx(id) == None:
+    if id not in self.clients == None:
       raise Exception('Cannot receive data, no client is connected')
     
-    idx = self.client_id_to_idx(id)
-    return _recv(self.clients[idx]['client'])
+    return _recv(self.clients[id]['client'])
 
   def close(self, id):
-    idx = self.client_id_to_idx(id)
-    self.clients[idx]['client'].close()
-    del self.clients[idx]
+    self.clients[id]["client"].close()
+    del self.clients[id]
 
   def close_socket(self):
     if self.socket:
