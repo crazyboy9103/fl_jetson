@@ -95,4 +95,4 @@ dependencies:
   - yarl=1.6.3=py38h2bbff1b_0
   - zipp=3.7.0=pyhd3eb1b0_0
   - zlib=1.2.11=h8cc25b3_4
-prefix: C:\Users\david\miniconda3\envs\temp
+prefix: C:\Users\David\.conda\envs\fl_server

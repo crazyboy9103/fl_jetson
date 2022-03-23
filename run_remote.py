@@ -43,7 +43,7 @@ class Jetson:
     def start_fed(self, host, port):
         threads = []
         for i, (port, con) in enumerate(zip(self.jetson_ports, self.connections)):
-            command = f'docker exec jetson_fl python3 /home/fl_jetson/socket/test_single_client.py --id {i} --host 147.47.200.209 --port 20000'
+            command = f'docker exec jetson_fl python3 /home/fl_jetson/socket/test_single_client.py --id {i} --host 211.193.55.176 --port 20000'
             print(f'----------------{port}----------------')
             try:
                 t=threading.Thread(target=con.run,args=(command,))
@@ -69,8 +69,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     jetson = Jetson(min_port = args.min, max_port=args.max)
-    jetson.check() # 통신 전에 무조건 실행되야 함
-    
+    jetson.check() 
     print("\n")
     print("Stop FL container")
     jetson.send_command("docker stop jetson_fl")
