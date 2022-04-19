@@ -12,7 +12,11 @@ if __name__ == "__main__":
    for i in range(args.cli):
       clients.append(FLClient(i, host=args.host, port=args.port))
 
+   threads = []
    for client in clients:
       thread = threading.Thread(target=client.task)
+      threads.append(thread)
       thread.start()
-      time.sleep(3)
+
+   for thread in threads:
+      thread.join()

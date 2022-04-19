@@ -222,7 +222,6 @@ class FLServer:
             "param": list(map(lambda layer: layer.tolist(), self.model.get_weights()))
         })
         assert len(msg) != 0, "Message must contain data"
-        #print("server model parameter size %.2f MB" % (msg.__sizeof__()))
         self.server.send(id, msg) # uses connection with client and send msg to the client
         recv_msg = self.server.recv(id)
         print("client %d sent parameter of size %.2f MB" % (id, recv_msg.__sizeof__()))
@@ -290,7 +289,6 @@ class FLServer:
         threads = []
 
         for id in range(max_clients):
-            #result_code = self.request_setup(id)
             thread = threading.Thread(target=self.request_setup, args=(id, clients_resultcode_dict,))
             threads.append(thread)
             thread.start()
@@ -323,7 +321,7 @@ class FLServer:
             "loss": tf.keras.losses.serialize(self.loss), 
             "metrics": self.metrics
         })
-        #print("model arch", model_config)
+
         print("server settings size %.2f MB" % (msg.__sizeof__()))
         assert len(msg) != 0, "Message must contain data"
         self.server.send(id, msg)
@@ -331,8 +329,6 @@ class FLServer:
         print("response from client %d" % (id))
         result_code = recv_msg.data
         clients_resultcode_dict[id] = result_code
-        #print(f"request train client {id}")
-        #print(clients_resultcode_dict)
         return result_code
             
 
@@ -353,7 +349,6 @@ class FLServer:
             thread.join()
 
         threads = []
-
         for client_id in self.server.clients:
             param = clients_param_dict[client_id]
             thread = threading.Thread(target=self.evaluate_param, args = (client_id, param, clients_acc_dict, ))
@@ -366,16 +361,16 @@ class FLServer:
         return clients_param_dict, clients_acc_dict
 
     def evaluate_param(self, id, param, clients_acc_dict):
-        temp_param = self.model.get_weights()
-        self.model.set_weights(param)
+        temp_model = self.build_model()
+        temp_model = self.compile_model(temp_model)
+        temp_model.set_weights(param)
 
         n = len(self.x_test)
         idxs = np.random.choice(n, n//10, replace=False)
         x_test, y_test = self.x_test[idxs], self.y_test[idxs]
 
-        acc = self.model.evaluate(x_test, y_test)[1]
+        acc = temp_model.evaluate(x_test, y_test)[1]
         clients_acc_dict[id] = acc
-        self.model.set_weights(temp_param)
         return acc
 
 

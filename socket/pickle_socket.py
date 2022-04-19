@@ -37,21 +37,13 @@ class Message(object):
   def __init__(self, source, flag, data = None):
     self.source = source
     self.flag = flag 
-    # Server -> Client 
-    #        0 : compile config (optim, loss, metrics) - dict
-    #        1 : model architecture - dict
-
-    # Client -> Server
-    #        2 : model parameters - list(np.array) 
-    #        3 : status code - int STATUS_CODE
-    #        4 : data idxs - {int client id: list(int)}
     self.data = data
 
   def __len__(self):
     return int(bool(self.data))
 
   def __sizeof__(self):
-    return get_size(self.data) / 1000000 # MB
+    return get_size(self.data) / (1024*1024) # MB
   
 
 class Server(object):
@@ -78,13 +70,11 @@ class Server(object):
   def send(self, id, data):
     if id not in self.clients:
       self.accept(id)
-
     _send(self.clients[id]['client'], data)
   
   def recv(self, id):
-    if id not in self.clients == None:
+    if id not in self.clients:
       raise Exception('Cannot receive data, no client is connected')
-    
     return _recv(self.clients[id]['client'])
 
   def close(self, id):
@@ -140,27 +130,35 @@ def _send(socket, data):
 
 def _recv(socket):
   raw_msglen = recvall(socket, 4)
-  #raw_msglen = recvall(socket, 4)
   if not raw_msglen:
       return None
   msglen = unpack('>I', raw_msglen)[0]
   msg =  recvall(socket, msglen)
-  return pickle.loads(msg)
+  try:
+    return pickle.loads(msg)
+  except:
+    print("\x00 exists")
+    msg = msg.rstrip(b"\x00")
+    extra_msglen = msglen-len(msg)
+    extra_msg = recvall(socket, extra_msglen)  
+    msg = msg + extra_msg
+    return pickle.loads(msg)
   
 def recvall(socket, n):
     # Helper function to recv n bytes or return None if EOF is hit
     data = bytearray()
-    cursor = 0
-    buffer_size = 1024
+    buffer_size = 4096
     while len(data) < n:
         #packet = socket.recv(n - len(data))
-        #if n - len(data) > buffer_size:
-        #  packet = socket.recv(buffer_size)
-        #else:
-        #  packet = socket.recv(n - len(data))
+        if n - len(data) > buffer_size:
+          packet = socket.recv(buffer_size)
+        else:
+          packet = socket.recv(n - len(data))
         
-        packet = socket.recv(1)
+        #print(packet)
+        #packet = packet.rstrip(b"\x00")
         if not packet:
-            break
+          break
+        
         data.extend(packet)
     return data
